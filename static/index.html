@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TravelWise V2</title>
+    <style>
+        :root {
+            --ink: #172033;
+            --muted: #667085;
+            --line: #d9e2ec;
+            --paper: #fffdf7;
+            --panel: rgba(255, 255, 255, 0.88);
+            --teal: #0f766e;
+            --coral: #f9735b;
+            --sun: #f6c85f;
+            --sky: #3b82f6;
+            --leaf: #65a30d;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 12% 12%, rgba(246, 200, 95, 0.45), transparent 28%),
+                radial-gradient(circle at 88% 18%, rgba(59, 130, 246, 0.25), transparent 24%),
+                linear-gradient(135deg, #eff8f5 0%, #fff7ed 46%, #eef6ff 100%);
+        }
+
+        .shell {
+            width: min(1120px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 34px 0;
+        }
+
+        .app {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .planner,
+        .results {
+            background: var(--panel);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            box-shadow: 0 18px 48px rgba(23, 32, 51, 0.14);
+            backdrop-filter: blur(14px);
+        }
+
+        .planner {
+            padding: 24px;
+            position: sticky;
+            top: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .brand-mark {
+            width: 46px;
+            height: 46px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--teal), var(--sky));
+            color: white;
+            display: grid;
+            place-items: center;
+            font-size: 24px;
+            box-shadow: 0 10px 24px rgba(15, 118, 110, 0.25);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            line-height: 1;
+            letter-spacing: 0;
+        }
+
+        .tagline {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        input {
+            width: 100%;
+            height: 48px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 0 14px;
+            background: rgba(255, 255, 255, 0.92);
+            color: var(--ink);
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--teal);
+            box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+        }
+
+        .quick-routes {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin: 18px 0 20px;
+        }
+
+        .quick-route {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--ink);
+            padding: 10px 12px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .quick-route:hover {
+            border-color: var(--coral);
+        }
+
+        .submit {
+            width: 100%;
+            height: 50px;
+            border: 0;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--teal), #1167b1);
+            color: white;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 12px 24px rgba(15, 118, 110, 0.24);
+        }
+
+        .submit:disabled {
+            opacity: 0.72;
+            cursor: wait;
+        }
+
+        .results {
+            min-height: 560px;
+            overflow: hidden;
+        }
+
+        .hero {
+            padding: 28px;
+            background:
+                linear-gradient(135deg, rgba(15, 118, 110, 0.9), rgba(59, 130, 246, 0.78)),
+                url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80");
+            background-size: cover;
+            background-position: center;
+            color: white;
+        }
+
+        .hero h2 {
+            margin: 0 0 8px;
+            font-size: 30px;
+            letter-spacing: 0;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: 620px;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.55;
+        }
+
+        .content {
+            padding: 22px;
+        }
+
+        .empty-state,
+        .loading,
+        .error {
+            display: grid;
+            place-items: center;
+            min-height: 330px;
+            text-align: center;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .loading {
+            display: none;
+        }
+
+        .loader {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 4px solid rgba(15, 118, 110, 0.12);
+            border-top-color: var(--teal);
+            margin: 0 auto 14px;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .route-header {
+            display: none;
+            margin-bottom: 18px;
+            padding: 16px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(246, 200, 95, 0.24), rgba(249, 115, 91, 0.12));
+            border: 1px solid rgba(246, 200, 95, 0.45);
+        }
+
+        .route-title {
+            margin: 0 0 6px;
+            font-size: 20px;
+        }
+
+        .route-summary {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .stops-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .stop-card {
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 190px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 8px 20px rgba(23, 32, 51, 0.06);
+            cursor: pointer;
+            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .stop-card:hover {
+            border-color: rgba(15, 118, 110, 0.45);
+            box-shadow: 0 14px 26px rgba(23, 32, 51, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .stop-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .stop-card h3 {
+            margin: 0;
+            font-size: 18px;
+            letter-spacing: 0;
+        }
+
+        .chip {
+            flex: 0 0 auto;
+            border-radius: 999px;
+            padding: 5px 9px;
+            background: rgba(15, 118, 110, 0.1);
+            color: var(--teal);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .description,
+        .why {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.55;
+            font-size: 14px;
+        }
+
+        .why {
+            margin-top: auto;
+            padding-top: 10px;
+            border-top: 1px solid #eef2f6;
+            color: #344054;
+        }
+
+        .deep-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+            color: var(--teal);
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .detail-backdrop {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            background: rgba(23, 32, 51, 0.48);
+            z-index: 10;
+        }
+
+        .detail-panel {
+            width: min(760px, 100%);
+            max-height: min(720px, calc(100vh - 36px));
+            overflow: auto;
+            background: var(--paper);
+            border-radius: 8px;
+            box-shadow: 0 26px 70px rgba(23, 32, 51, 0.32);
+        }
+
+        .detail-head {
+            position: sticky;
+            top: 0;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f766e, #1167b1);
+            color: white;
+            z-index: 1;
+        }
+
+        .detail-head h2 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 0;
+        }
+
+        .detail-subtitle {
+            margin: 6px 0 0;
+            color: rgba(255, 255, 255, 0.82);
+            line-height: 1.45;
+        }
+
+        .close-detail {
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.14);
+            color: white;
+            font-size: 22px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .detail-body {
+            padding: 20px;
+        }
+
+        .detail-loading,
+        .detail-error {
+            display: none;
+            min-height: 120px;
+            place-items: center;
+            text-align: center;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .detail-error {
+            color: #b42318;
+        }
+
+        .detail-content {
+            display: none;
+        }
+
+        .detail-overview {
+            margin: 0 0 18px;
+            color: #344054;
+            line-height: 1.65;
+        }
+
+        .detail-facts {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .fact {
+            padding: 12px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: white;
+        }
+
+        .fact-label {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .fact-value {
+            color: var(--ink);
+            font-weight: 700;
+        }
+
+        .detail-section {
+            margin-top: 18px;
+        }
+
+        .detail-section h3 {
+            margin: 0 0 10px;
+            font-size: 17px;
+            letter-spacing: 0;
+        }
+
+        .detail-list {
+            margin: 0;
+            padding-left: 20px;
+            color: #344054;
+            line-height: 1.65;
+        }
+
+        .detail-note {
+            display: none;
+            margin-bottom: 14px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: rgba(246, 200, 95, 0.2);
+            border: 1px solid rgba(246, 200, 95, 0.45);
+            color: #7a4b00;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        .error {
+            display: none;
+            color: #b42318;
+        }
+
+        @media (max-width: 900px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+
+            .planner {
+                position: static;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .shell {
+                width: min(100% - 20px, 1120px);
+                padding: 10px 0;
+            }
+
+            .planner,
+            .content,
+            .hero {
+                padding: 18px;
+            }
+
+            .stops-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-facts {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <section class="app">
+            <aside class="planner">
+                <div class="brand">
+                    <div class="brand-mark" aria-hidden="true">TW</div>
+                    <div>
+                        <h1>TravelWise</h1>
+                        <p class="tagline">AI route stops, cleaned into cards</p>
+                    </div>
+                </div>
+
+                <form id="routeForm">
+                    <div class="field">
+                        <label for="start">Starting point</label>
+                        <input id="start" name="start" placeholder="Example: New York" autocomplete="off">
+                    </div>
+
+                    <div class="field">
+                        <label for="end">Destination</label>
+                        <input id="end" name="end" placeholder="Example: Washington DC" autocomplete="off">
+                    </div>
+
+                    <div class="quick-routes" aria-label="Quick route examples">
+                        <button class="quick-route" type="button" data-start="New York" data-end="Washington DC">New York to Washington DC</button>
+                        <button class="quick-route" type="button" data-start="Los Angeles" data-end="San Francisco">Los Angeles to San Francisco</button>
+                        <button class="quick-route" type="button" data-start="Cairo" data-end="Alexandria">Cairo to Alexandria</button>
+                    </div>
+
+                    <button class="submit" id="submitButton" type="submit">Explore Waypoints</button>
+                </form>
+            </aside>
+
+            <section class="results">
+                <div class="hero">
+                    <h2 id="heroTitle">Build a smarter trip between two points</h2>
+                    <p id="heroText">Enter a departure and destination, then the local LLM will suggest tourist stops and present them as readable travel cards.</p>
+                </div>
+
+                <div class="content">
+                    <div class="empty-state" id="emptyState">
+                        Choose a route to begin.
+                    </div>
+
+                    <div class="loading" id="loadingState">
+                        <div>
+                            <div class="loader"></div>
+                            Curating route ideas with your local model...
+                        </div>
+                    </div>
+
+                    <div class="error" id="errorState"></div>
+
+                    <div class="route-header" id="routeHeader">
+                        <h2 class="route-title" id="routeTitle"></h2>
+                        <p class="route-summary" id="routeSummary"></p>
+                    </div>
+
+                    <div class="stops-grid" id="stopsGrid"></div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <div class="detail-backdrop" id="detailBackdrop" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+        <article class="detail-panel">
+            <header class="detail-head">
+                <div>
+                    <h2 id="detailTitle">Stop details</h2>
+                    <p class="detail-subtitle" id="detailSubtitle"></p>
+                </div>
+                <button class="close-detail" id="closeDetail" type="button" aria-label="Close details">x</button>
+            </header>
+            <div class="detail-body">
+                <div class="detail-loading" id="detailLoading">
+                    <div>
+                        <div class="loader"></div>
+                        Building a deeper travel guide...
+                    </div>
+                </div>
+                <div class="detail-error" id="detailError"></div>
+                <div class="detail-content" id="detailContent">
+                    <div class="detail-note" id="detailNote"></div>
+                    <p class="detail-overview" id="detailOverview"></p>
+                    <div class="detail-facts">
+                        <div class="fact">
+                            <span class="fact-label">Suggested Time</span>
+                            <span class="fact-value" id="detailTime"></span>
+                        </div>
+                        <div class="fact">
+                            <span class="fact-label">Best For</span>
+                            <span class="fact-value" id="detailBestFor"></span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <h3>Highlights</h3>
+                        <ul class="detail-list" id="detailHighlights"></ul>
+                    </div>
+                    <div class="detail-section">
+                        <h3>Mini Itinerary</h3>
+                        <ol class="detail-list" id="detailItinerary"></ol>
+                    </div>
+                    <div class="detail-section">
+                        <h3>Travel Tip</h3>
+                        <p class="detail-overview" id="detailTip"></p>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <script>
+        const form = document.querySelector("#routeForm");
+        const startInput = document.querySelector("#start");
+        const endInput = document.querySelector("#end");
+        const submitButton = document.querySelector("#submitButton");
+        const emptyState = document.querySelector("#emptyState");
+        const loadingState = document.querySelector("#loadingState");
+        const errorState = document.querySelector("#errorState");
+        const routeHeader = document.querySelector("#routeHeader");
+        const routeTitle = document.querySelector("#routeTitle");
+        const routeSummary = document.querySelector("#routeSummary");
+        const stopsGrid = document.querySelector("#stopsGrid");
+        const heroTitle = document.querySelector("#heroTitle");
+        const heroText = document.querySelector("#heroText");
+        const detailBackdrop = document.querySelector("#detailBackdrop");
+        const detailTitle = document.querySelector("#detailTitle");
+        const detailSubtitle = document.querySelector("#detailSubtitle");
+        const closeDetail = document.querySelector("#closeDetail");
+        const detailLoading = document.querySelector("#detailLoading");
+        const detailError = document.querySelector("#detailError");
+        const detailContent = document.querySelector("#detailContent");
+        const detailOverview = document.querySelector("#detailOverview");
+        const detailTime = document.querySelector("#detailTime");
+        const detailBestFor = document.querySelector("#detailBestFor");
+        const detailHighlights = document.querySelector("#detailHighlights");
+        const detailItinerary = document.querySelector("#detailItinerary");
+        const detailTip = document.querySelector("#detailTip");
+        const detailNote = document.querySelector("#detailNote");
+        let currentStops = [];
+        const apiBase = window.location.protocol === "file:" ? "http://localhost:8001" : "";
+
+        function escapeHtml(value) {
+            return String(value || "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function setState(state) {
+            emptyState.style.display = state === "empty" ? "grid" : "none";
+            loadingState.style.display = state === "loading" ? "grid" : "none";
+            errorState.style.display = state === "error" ? "grid" : "none";
+            routeHeader.style.display = state === "results" ? "block" : "none";
+            stopsGrid.style.display = state === "results" ? "grid" : "none";
+            submitButton.disabled = state === "loading";
+        }
+
+        function renderResults(data) {
+            const stops = Array.isArray(data.stops) ? data.stops : [];
+            currentStops = stops;
+
+            if (!stops.length) {
+                errorState.textContent = "The AI responded, but no usable stops were found. Try a more specific route.";
+                setState("error");
+                return;
+            }
+
+            routeTitle.textContent = data.route || `${startInput.value} to ${endInput.value}`;
+            routeSummary.textContent = data.summary || "Suggested tourist stops for your route.";
+            heroTitle.textContent = "Recommended stops";
+            heroText.textContent = "Clean, structured suggestions generated from your local LLM.";
+
+            stopsGrid.innerHTML = stops.map((stop, index) => `
+                <article class="stop-card" tabindex="0" role="button" data-stop-index="${index}" aria-label="Open details for ${escapeHtml(stop.name)}">
+                    <div class="stop-top">
+                        <h3>${escapeHtml(stop.name)}</h3>
+                        <span class="chip">${escapeHtml(stop.category || "Travel idea")}</span>
+                    </div>
+                    <p class="description">${escapeHtml(stop.description)}</p>
+                    <p class="why"><strong>Why visit:</strong> ${escapeHtml(stop.why_visit || "Worth a stop along the way.")}</p>
+                    <span class="deep-link">Open deep dive -></span>
+                </article>
+            `).join("");
+
+            setState("results");
+        }
+
+        function setDetailState(state) {
+            detailLoading.style.display = state === "loading" ? "grid" : "none";
+            detailError.style.display = state === "error" ? "grid" : "none";
+            detailContent.style.display = state === "content" ? "block" : "none";
+        }
+
+        function renderList(target, items) {
+            target.innerHTML = (Array.isArray(items) ? items : []).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+        }
+
+        function renderDetail(data, note = "") {
+            detailTitle.textContent = data.name || "Stop details";
+            detailOverview.textContent = data.overview || "No overview returned.";
+            detailTime.textContent = data.suggested_time || "1 to 2 hours";
+            detailBestFor.textContent = data.best_for || "Travelers";
+            detailTip.textContent = data.travel_tip || "Check opening hours before you go.";
+            renderList(detailHighlights, data.highlights);
+            renderList(detailItinerary, data.mini_itinerary);
+            detailNote.textContent = note;
+            detailNote.style.display = note ? "block" : "none";
+            setDetailState("content");
+        }
+
+        function localDetailForStop(stop) {
+            return {
+                name: stop.name || "Stop details",
+                overview: stop.description || "This stop was suggested for your route.",
+                suggested_time: "1 to 2 hours",
+                best_for: stop.category || "Travelers",
+                highlights: [
+                    stop.why_visit || "A worthwhile route stop",
+                    "Good opportunity to pause and explore",
+                    "Adds local character to the journey",
+                ],
+                mini_itinerary: [
+                    "Arrive and get oriented",
+                    "Explore the main attraction",
+                    "Take photos or try a nearby local spot",
+                ],
+                travel_tip: "Use this as a starting point and confirm exact hours, tickets, and travel time before going.",
+            };
+        }
+
+        async function openStopDetail(stop) {
+            detailBackdrop.style.display = "flex";
+            detailTitle.textContent = stop.name || "Stop details";
+            detailSubtitle.textContent = `${startInput.value.trim()} to ${endInput.value.trim()}`;
+            renderDetail(localDetailForStop(stop), "Showing a quick local deep dive while the AI builds a richer version.");
+
+            try {
+                const response = await fetch(`${apiBase}/detail`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        start_point: startInput.value.trim(),
+                        end_point: endInput.value.trim(),
+                        name: stop.name,
+                        description: stop.description,
+                        category: stop.category || "Travel idea",
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || "The server could not generate a deep dive.");
+                }
+
+                renderDetail(data);
+            } catch (error) {
+                renderDetail(
+                    localDetailForStop(stop),
+                    error.message || "Could not reach the AI detail endpoint. Showing the local deep dive instead."
+                );
+            }
+        }
+
+        function closeDetailPanel() {
+            detailBackdrop.style.display = "none";
+        }
+
+        closeDetail.addEventListener("click", closeDetailPanel);
+
+        detailBackdrop.addEventListener("click", (event) => {
+            if (event.target === detailBackdrop) {
+                closeDetailPanel();
+            }
+        });
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+                closeDetailPanel();
+            }
+        });
+
+        stopsGrid.addEventListener("click", (event) => {
+            const card = event.target.closest(".stop-card");
+            if (!card) return;
+
+            const stop = currentStops[Number(card.dataset.stopIndex)];
+            if (stop) openStopDetail(stop);
+        });
+
+        stopsGrid.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+
+            const card = event.target.closest(".stop-card");
+            if (!card) return;
+
+            event.preventDefault();
+            const stop = currentStops[Number(card.dataset.stopIndex)];
+            if (stop) openStopDetail(stop);
+        });
+
+        document.querySelectorAll(".quick-route").forEach((button) => {
+            button.addEventListener("click", () => {
+                startInput.value = button.dataset.start;
+                endInput.value = button.dataset.end;
+                form.requestSubmit();
+            });
+        });
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const start = startInput.value.trim();
+            const end = endInput.value.trim();
+
+            if (!start || !end) {
+                errorState.textContent = "Please enter both a starting point and a destination.";
+                setState("error");
+                return;
+            }
+
+            setState("loading");
+
+            try {
+                const response = await fetch(`${apiBase}/suggest`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ start_point: start, end_point: end }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || "The server could not generate suggestions.");
+                }
+
+                renderResults(data);
+            } catch (error) {
+                errorState.textContent = error.message || "Something went wrong. Confirm FastAPI and Ollama are both running.";
+                setState("error");
+            }
+        });
+    </script>
+</body>
+</html>
